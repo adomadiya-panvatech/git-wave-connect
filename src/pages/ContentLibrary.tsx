@@ -133,6 +133,13 @@ const ContentLibrary = () => {
             <Plus className="w-4 h-4 mr-2" />
             Add HTML Card
           </Button>
+          <Button 
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+            onClick={() => window.open('/cms/html-card-editor', '_blank')}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            HTML Editor
+          </Button>
         </div>
       </div>
 
