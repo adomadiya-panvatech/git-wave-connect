@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
@@ -18,17 +17,23 @@ const GoalTemplates = () => {
       id: 1,
       image: '/lovable-uploads/50965e3a-b9ef-4d7c-a90e-53cbd6a5a519.png',
       name: 'Ask someone how they are doing',
+      shortDescription: 'Connect with others by asking about their wellbeing',
+      longDescription: '<p>This is a simple yet powerful way to show you care about others. Taking time to genuinely ask someone how they are doing can make a significant difference in their day and strengthen your relationships.</p><ul><li>Shows genuine interest</li><li>Builds stronger connections</li><li>Creates opportunities for deeper conversations</li></ul>',
       activities: 0,
       taxonomies: 3,
-      isPrivate: false
+      isPrivate: false,
+      searchTags: ['social', 'connection', 'empathy']
     },
     {
       id: 2,
       image: '/lovable-uploads/ff5af5ed-03b1-4a14-8fbc-397ea41a6aef.png',
       name: 'Bake',
+      shortDescription: 'Create delicious treats through baking',
+      longDescription: '<p>Baking is a wonderful way to express creativity while creating something delicious. Whether you\'re making bread, cookies, or cakes, baking can be both therapeutic and rewarding.</p><h3>Benefits of Baking:</h3><ul><li>Stress relief</li><li>Creative expression</li><li>Sharing with others</li></ul>',
       activities: 0,
       taxonomies: 3,
-      isPrivate: false
+      isPrivate: false,
+      searchTags: ['cooking', 'creativity', 'food']
     },
     {
       id: 3,
@@ -69,6 +74,13 @@ const GoalTemplates = () => {
   ];
 
   const handleEdit = (template: any) => {
+    console.log('Editing template:', template);
+    setEditingTemplate(template);
+    setIsFormOpen(true);
+  };
+
+  const handleView = (template: any) => {
+    console.log('Viewing template:', template);
     setEditingTemplate(template);
     setIsFormOpen(true);
   };
@@ -151,7 +163,10 @@ const GoalTemplates = () => {
                         )}
                       </TableCell>
                       <TableCell>
-                        <span className="text-blue-600 hover:underline cursor-pointer">
+                        <span 
+                          className="text-blue-600 hover:underline cursor-pointer"
+                          onClick={() => handleView(template)}
+                        >
                           {template.name}
                         </span>
                       </TableCell>
@@ -168,6 +183,7 @@ const GoalTemplates = () => {
                           <button 
                             onClick={() => handleEdit(template)}
                             className="p-1 hover:bg-gray-100 rounded"
+                            title="Edit"
                           >
                             <Eye className="w-4 h-4 text-gray-500" />
                           </button>

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
@@ -22,18 +22,49 @@ const GoalTemplateForm: React.FC<GoalTemplateFormProps> = ({
   isEdit = false 
 }) => {
   const [formData, setFormData] = useState({
-    name: template?.name || '',
-    shortDescription: template?.shortDescription || '',
-    longDescription: template?.longDescription || '',
-    isPrivate: template?.isPrivate || false,
-    searchTags: template?.searchTags || [],
-    image: template?.image || null
+    name: '',
+    shortDescription: '',
+    longDescription: '',
+    isPrivate: false,
+    searchTags: [],
+    image: null
   });
 
   const [newTag, setNewTag] = useState('');
+  const [htmlEditorContent, setHtmlEditorContent] = useState('');
+
+  useEffect(() => {
+    if (template) {
+      console.log('Loading template data:', template);
+      setFormData({
+        name: template.name || '',
+        shortDescription: template.shortDescription || '',
+        longDescription: template.longDescription || '',
+        isPrivate: template.isPrivate || false,
+        searchTags: template.searchTags || [],
+        image: template.image || null
+      });
+      setHtmlEditorContent(template.longDescription || '');
+    } else {
+      // Reset form for new template
+      setFormData({
+        name: '',
+        shortDescription: '',
+        longDescription: '',
+        isPrivate: false,
+        searchTags: [],
+        image: null
+      });
+      setHtmlEditorContent('');
+    }
+  }, [template]);
 
   const handleSave = () => {
-    console.log('Saving goal template:', formData);
+    const updatedFormData = {
+      ...formData,
+      longDescription: htmlEditorContent
+    };
+    console.log('Saving goal template:', updatedFormData);
     onClose();
   };
 
@@ -52,6 +83,10 @@ const GoalTemplateForm: React.FC<GoalTemplateFormProps> = ({
       ...prev,
       searchTags: prev.searchTags.filter((_, i) => i !== index)
     }));
+  };
+
+  const handleHtmlEditorChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setHtmlEditorContent(e.target.value);
   };
 
   return (
@@ -112,13 +147,30 @@ const GoalTemplateForm: React.FC<GoalTemplateFormProps> = ({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2 uppercase text-xs">
-                Long Description
+                Long Description (HTML Editor)
               </label>
-              <Textarea
-                value={formData.longDescription}
-                onChange={(e) => setFormData(prev => ({ ...prev, longDescription: e.target.value }))}
-                className="w-full h-24"
-              />
+              <div className="border rounded-lg">
+                <div className="bg-gray-50 px-3 py-2 border-b">
+                  <span className="text-xs text-gray-600">HTML Editor - You can use HTML tags like &lt;p&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;h3&gt;, etc.</span>
+                </div>
+                <Textarea
+                  value={htmlEditorContent}
+                  onChange={handleHtmlEditorChange}
+                  className="w-full h-32 border-0 rounded-t-none"
+                  placeholder="Enter HTML content here..."
+                />
+              </div>
+              
+              {/* HTML Preview */}
+              {htmlEditorContent && (
+                <div className="mt-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Preview:</label>
+                  <div 
+                    className="border rounded p-3 bg-gray-50 max-h-32 overflow-y-auto"
+                    dangerouslySetInnerHTML={{ __html: htmlEditorContent }}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="flex items-center space-x-2">
@@ -195,7 +247,7 @@ const GoalTemplateForm: React.FC<GoalTemplateFormProps> = ({
                   </button>
                 </div>
                 <p className="text-blue-600 hover:underline cursor-pointer mt-2">
-                  Ask someone how they are doing
+                  {template?.name || 'Template activity'}
                 </p>
               </div>
             )}
