@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -6,10 +5,17 @@ import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Search, Plus, Link as LinkIcon, Eye, Edit3 } from 'lucide-react';
+import TipForm from '../components/Content/TipForm';
+import ArticleForm from '../components/Content/ArticleForm';
+import HTMLCardForm from '../components/Content/HTMLCardForm';
 
 const ContentLibrary = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('all');
+  const [showTipForm, setShowTipForm] = useState(false);
+  const [showArticleForm, setShowArticleForm] = useState(false);
+  const [showHTMLCardForm, setShowHTMLCardForm] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
 
   const contentTypes = [
     { id: 'all', label: 'All', color: 'bg-gray-100 text-gray-800' },
@@ -65,17 +71,54 @@ const ContentLibrary = () => {
     return matchesSearch && matchesType;
   });
 
+  const handleEdit = (item: any) => {
+    setEditingItem(item);
+    if (item.type === 'tip') {
+      setShowTipForm(true);
+    } else if (item.type === 'article') {
+      setShowArticleForm(true);
+    } else if (item.type === 'html') {
+      setShowHTMLCardForm(true);
+    }
+  };
+
+  const handleView = (item: any) => {
+    console.log('Viewing item:', item);
+    // Implement view functionality
+  };
+
+  const handleAddTip = () => {
+    setEditingItem(null);
+    setShowTipForm(true);
+  };
+
+  const handleAddArticle = () => {
+    setEditingItem(null);
+    setShowArticleForm(true);
+  };
+
+  const handleAddHTMLCard = () => {
+    setEditingItem(null);
+    setShowHTMLCardForm(true);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-black">Content Library</h1>
         <div className="flex gap-2">
-          <Button className="bg-green-600 hover:bg-green-700 text-white">
+          <Button 
+            className="bg-green-600 hover:bg-green-700 text-white"
+            onClick={handleAddTip}
+          >
             <Plus className="w-4 h-4 mr-2" />
             Add Tip
           </Button>
-          <Button className="bg-green-600 hover:bg-green-700 text-white">
+          <Button 
+            className="bg-green-600 hover:bg-green-700 text-white"
+            onClick={handleAddArticle}
+          >
             <Plus className="w-4 h-4 mr-2" />
             Add Content
           </Button>
@@ -83,7 +126,10 @@ const ContentLibrary = () => {
             <Plus className="w-4 h-4 mr-2" />
             Add TOVI Article
           </Button>
-          <Button className="bg-green-600 hover:bg-green-700 text-white">
+          <Button 
+            className="bg-green-600 hover:bg-green-700 text-white"
+            onClick={handleAddHTMLCard}
+          >
             <Plus className="w-4 h-4 mr-2" />
             Add HTML Card
           </Button>
@@ -175,10 +221,20 @@ const ContentLibrary = () => {
                         <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
                           <LinkIcon className="w-4 h-4" />
                         </Button>
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="h-8 w-8 p-0"
+                          onClick={() => handleView(item)}
+                        >
                           <Eye className="w-4 h-4" />
                         </Button>
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="h-8 w-8 p-0"
+                          onClick={() => handleEdit(item)}
+                        >
                           <Edit3 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -204,6 +260,34 @@ const ContentLibrary = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Form Dialogs */}
+      <TipForm
+        isOpen={showTipForm}
+        onClose={() => {
+          setShowTipForm(false);
+          setEditingItem(null);
+        }}
+        tip={editingItem}
+      />
+
+      <ArticleForm
+        isOpen={showArticleForm}
+        onClose={() => {
+          setShowArticleForm(false);
+          setEditingItem(null);
+        }}
+        article={editingItem}
+      />
+
+      <HTMLCardForm
+        isOpen={showHTMLCardForm}
+        onClose={() => {
+          setShowHTMLCardForm(false);
+          setEditingItem(null);
+        }}
+        card={editingItem}
+      />
     </div>
   );
 };

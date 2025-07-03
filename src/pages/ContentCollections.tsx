@@ -1,13 +1,15 @@
-
 import React, { useState } from 'react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
 import { Search, Plus, Eye, Edit3, Link as LinkIcon } from 'lucide-react';
+import ContentCollectionForm from '../components/Content/ContentCollectionForm';
 
 const ContentCollections = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [editingCollection, setEditingCollection] = useState(null);
 
   const collections = [
     {
@@ -77,12 +79,30 @@ const ContentCollections = () => {
     collection.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleEdit = (collection: any) => {
+    setEditingCollection(collection);
+    setShowForm(true);
+  };
+
+  const handleAdd = () => {
+    setEditingCollection(null);
+    setShowForm(true);
+  };
+
+  const handleView = (collection: any) => {
+    console.log('Viewing collection:', collection);
+    // Implement view functionality
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-black">Content Collections</h1>
-        <Button className="bg-green-600 hover:bg-green-700 text-white">
+        <Button 
+          className="bg-green-600 hover:bg-green-700 text-white"
+          onClick={handleAdd}
+        >
           <Plus className="w-4 h-4 mr-2" />
           Add Content Collection
         </Button>
@@ -143,8 +163,21 @@ const ContentCollections = () => {
                     </td>
                     <td className="p-4">
                       <div className="flex gap-2">
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="h-8 w-8 p-0"
+                          onClick={() => handleView(collection)}
+                        >
                           <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="h-8 w-8 p-0"
+                          onClick={() => handleEdit(collection)}
+                        >
+                          <Edit3 className="w-4 h-4" />
                         </Button>
                         <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
                           <LinkIcon className="w-4 h-4" />
@@ -158,6 +191,16 @@ const ContentCollections = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Form Dialog */}
+      <ContentCollectionForm
+        isOpen={showForm}
+        onClose={() => {
+          setShowForm(false);
+          setEditingCollection(null);
+        }}
+        collection={editingCollection}
+      />
     </div>
   );
 };
