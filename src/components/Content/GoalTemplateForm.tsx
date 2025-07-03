@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
@@ -177,7 +176,7 @@ const GoalTemplateForm: React.FC<GoalTemplateFormProps> = ({
               <Checkbox
                 id="private"
                 checked={formData.isPrivate}
-                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isPrivate: checked }))}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isPrivate: !!checked }))}
               />
               <label htmlFor="private" className="text-sm font-medium">
                 Private
