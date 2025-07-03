@@ -1,12 +1,13 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Card, CardContent } from '../ui/card';
-import { Heart, RefreshCw, Video, Image, FileText } from 'lucide-react';
+import { Textarea } from '../ui/textarea';
+import { Badge } from '../ui/badge';
+import { Heart, RefreshCw, Video, Image, FileText, Eye, Code, Move, RotateCcw, Copy, Download } from 'lucide-react';
 
 interface HTMLCardFormProps {
   isOpen: boolean;
@@ -24,8 +25,41 @@ const HTMLCardForm: React.FC<HTMLCardFormProps> = ({ isOpen, onClose, card }) =>
       image: false,
       template: false
     },
-    author: ''
+    author: '',
+    htmlCode: `<div style="padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; text-align: center; color: white;">
+  <h2>Hello World!</h2>
+  <p>This is a sample HTML card. Try editing the code!</p>
+  <button style="background: white; color: #667eea; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Click me</button>
+</div>`
   });
+
+  const [previewHtml, setPreviewHtml] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
+  const [position, setPosition] = useState({ x: 50, y: 50 });
+  const cardRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<{ offsetX: number; offsetY: number }>({ offsetX: 0, offsetY: 0 });
+
+  const exampleSnippets = [
+    {
+      name: "Gradient Card",
+      code: `<div style="padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; text-align: center; color: white;">
+  <h2>Gradient Card</h2>
+  <p>Beautiful gradient background</p>
+</div>`
+    },
+    {
+      name: "Product Card",
+      code: `<div style="border: 1px solid #ddd; border-radius: 8px; padding: 16px; max-width: 300px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+  <img src="https://via.placeholder.com/250x150" alt="Product" style="width: 100%; border-radius: 4px; margin-bottom: 12px;">
+  <h3 style="margin: 0 0 8px 0; color: #333;">Product Name</h3>
+  <p style="color: #666; margin: 0 0 12px 0;">Short product description here</p>
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <span style="font-size: 20px; font-weight: bold; color: #e74c3c;">$29.99</span>
+    <button style="background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Add to Cart</button>
+  </div>
+</div>`
+    }
+  ];
 
   useEffect(() => {
     if (card) {
@@ -38,8 +72,12 @@ const HTMLCardForm: React.FC<HTMLCardFormProps> = ({ isOpen, onClose, card }) =>
           image: false,
           template: false
         },
-        author: card.author || ''
+        author: card.author || '',
+        htmlCode: card.htmlCode || formData.htmlCode
       });
+      setPreviewHtml(card.htmlCode || formData.htmlCode);
+    } else {
+      setPreviewHtml(formData.htmlCode);
     }
   }, [card]);
 
@@ -49,17 +87,85 @@ const HTMLCardForm: React.FC<HTMLCardFormProps> = ({ isOpen, onClose, card }) =>
     onClose();
   };
 
+  const handlePreview = () => {
+    setPreviewHtml(formData.htmlCode);
+  };
+
+  const handleReset = () => {
+    const resetCode = exampleSnippets[0].code;
+    setFormData({ ...formData, htmlCode: resetCode });
+    setPreviewHtml(resetCode);
+  };
+
+  const handleCopyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(formData.htmlCode);
+    } catch (err) {
+      console.error('Failed to copy code:', err);
+    }
+  };
+
+  const handleDownload = () => {
+    const blob = new Blob([formData.htmlCode], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'html-card.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const loadExample = (code: string) => {
+    setFormData({ ...formData, htmlCode: code });
+    setPreviewHtml(code);
+  };
+
+  // Drag functionality
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!cardRef.current) return;
+    
+    setIsDragging(true);
+    const rect = cardRef.current.getBoundingClientRect();
+    dragRef.current = {
+      offsetX: e.clientX - rect.left,
+      offsetY: e.clientY - rect.top
+    };
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return;
+    
+    setPosition({
+      x: e.clientX - dragRef.current.offsetX,
+      y: e.clientY - dragRef.current.offsetY
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging]);
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex justify-between items-center">
             <DialogTitle>{card ? 'Edit HTML Card' : 'New HTML Card'}</DialogTitle>
             <div className="flex gap-2">
-              <Button className="bg-orange-500 text-white">
-                HTML snippets
-              </Button>
-              <Button type="submit" className="bg-green-600 text-white">
+              <Button type="submit" className="bg-green-600 text-white" onClick={handleSubmit}>
                 Save
               </Button>
               <Button variant="outline" onClick={onClose}>
@@ -69,41 +175,24 @@ const HTMLCardForm: React.FC<HTMLCardFormProps> = ({ isOpen, onClose, card }) =>
           </div>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Mobile Preview */}
-          <div className="flex justify-center">
-            <div className="w-80 h-96 bg-black rounded-3xl p-4">
-              <div className="w-full h-full bg-white rounded-2xl p-4 flex flex-col items-center justify-center">
-                <Button 
-                  variant="outline" 
-                  className="mb-8 flex items-center gap-2"
-                  onClick={() => console.log('Refresh clicked')}
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  Refresh
-                </Button>
-                <Heart className="w-8 h-8 text-gray-300" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Form Section */}
+          <div className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Card name"
+                />
               </div>
-            </div>
-          </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Card name"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="type">Type</Label>
-              <div className="flex justify-between items-center">
+              <div className="space-y-2">
+                <Label htmlFor="type">Type</Label>
                 <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
-                  <SelectTrigger className="flex-1">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -112,63 +201,20 @@ const HTMLCardForm: React.FC<HTMLCardFormProps> = ({ isOpen, onClose, card }) =>
                     <SelectItem value="Internal link">Internal link</SelectItem>
                   </SelectContent>
                 </Select>
-                <span className="ml-4 text-gray-500">none</span>
               </div>
-            </div>
 
-            <div className="space-y-4">
-              <Label>Details</Label>
-              
               <div className="space-y-2">
                 <Label htmlFor="template">Template</Label>
-                <div className="flex justify-between items-center">
-                  <Select value={formData.template} onValueChange={(value) => setFormData({ ...formData, template: value })}>
-                    <SelectTrigger className="flex-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="flexible-card">flexible-card</SelectItem>
-                      <SelectItem value="basic-card">basic-card</SelectItem>
-                      <SelectItem value="advanced-card">advanced-card</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button variant="outline" size="sm" className="ml-2">
-                    ×
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Media carousel</Label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="w-12 h-12 border border-gray-300 rounded flex items-center justify-center">
-                        <Video className="w-6 h-6 text-gray-400" />
-                      </div>
-                      <span className="text-sm text-gray-600">video</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="w-12 h-12 border border-gray-300 rounded flex items-center justify-center">
-                        <Image className="w-6 h-6 text-gray-400" />
-                      </div>
-                      <span className="text-sm text-gray-600">image</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="w-12 h-12 border border-gray-300 rounded flex items-center justify-center bg-gray-100">
-                        <div className="w-6 h-6 border border-gray-400 rounded flex items-center justify-center">
-                          <span className="text-xs">+</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-center gap-2 mt-4">
-                    <div className="w-12 h-12 border border-gray-300 rounded flex items-center justify-center">
-                      <FileText className="w-6 h-6 text-gray-400" />
-                    </div>
-                    <span className="text-sm text-gray-600">template</span>
-                  </div>
-                </div>
+                <Select value={formData.template} onValueChange={(value) => setFormData({ ...formData, template: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="flexible-card">flexible-card</SelectItem>
+                    <SelectItem value="basic-card">basic-card</SelectItem>
+                    <SelectItem value="advanced-card">advanced-card</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
@@ -180,8 +226,119 @@ const HTMLCardForm: React.FC<HTMLCardFormProps> = ({ isOpen, onClose, card }) =>
                   placeholder="Author name"
                 />
               </div>
+            </form>
+
+            {/* Example Snippets */}
+            <div className="space-y-2">
+              <Label>Example Snippets</Label>
+              <div className="space-y-2">
+                {exampleSnippets.map((snippet, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 border rounded hover:bg-gray-50">
+                    <span className="font-medium text-sm">{snippet.name}</span>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => loadExample(snippet.code)}
+                    >
+                      Load
+                    </Button>
+                  </div>
+                ))}
+              </div>
             </div>
-          </form>
+          </div>
+
+          {/* HTML Editor Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Code className="w-5 h-5" />
+              <Label className="text-lg font-semibold">HTML Editor</Label>
+            </div>
+            
+            <Textarea
+              value={formData.htmlCode}
+              onChange={(e) => setFormData({ ...formData, htmlCode: e.target.value })}
+              placeholder="Enter your HTML code here..."
+              className="font-mono text-sm min-h-[300px] resize-none"
+            />
+            
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={handlePreview} size="sm" className="flex items-center gap-2">
+                <Eye className="w-4 h-4" />
+                Preview
+              </Button>
+              <Button variant="outline" onClick={handleReset} size="sm" className="flex items-center gap-2">
+                <RotateCcw className="w-4 h-4" />
+                Reset
+              </Button>
+              <Button variant="outline" onClick={handleCopyCode} size="sm" className="flex items-center gap-2">
+                <Copy className="w-4 h-4" />
+                Copy
+              </Button>
+              <Button variant="outline" onClick={handleDownload} size="sm" className="flex items-center gap-2">
+                <Download className="w-4 h-4" />
+                Download
+              </Button>
+            </div>
+          </div>
+
+          {/* Preview Section */}
+          <div className="space-y-4">
+            <div 
+              ref={cardRef}
+              className={`border rounded-lg ${isDragging ? 'shadow-lg cursor-grabbing' : 'cursor-grab'}`}
+              style={{
+                position: isDragging ? 'fixed' : 'relative',
+                left: isDragging ? `${position.x}px` : 'auto',
+                top: isDragging ? `${position.y}px` : 'auto',
+                zIndex: isDragging ? 1000 : 'auto'
+              }}
+            >
+              <div 
+                className="p-4 border-b cursor-grab active:cursor-grabbing"
+                onMouseDown={handleMouseDown}
+              >
+                <div className="flex items-center gap-2">
+                  <Move className="w-5 h-5" />
+                  <span className="font-semibold">Live Preview</span>
+                  <Badge variant="secondary" className="ml-auto">
+                    Draggable
+                  </Badge>
+                </div>
+              </div>
+              <div className="p-4">
+                <div className="min-h-[200px] border-2 border-dashed border-gray-200 rounded-lg bg-gray-50 p-4">
+                  {previewHtml ? (
+                    <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-500">
+                      Click "Preview" to see your HTML rendered here
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Preview Info */}
+            <div className="p-4 border rounded-lg bg-gray-50">
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">HTML Length:</span>
+                  <span className="font-mono">{formData.htmlCode.length} chars</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Lines:</span>
+                  <span className="font-mono">{formData.htmlCode.split('\n').length}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Drag Status:</span>
+                  <Badge variant={isDragging ? "default" : "secondary"}>
+                    {isDragging ? "Dragging" : "Static"}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
